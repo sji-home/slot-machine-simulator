@@ -9,7 +9,6 @@ public class SimulatorMain
 {
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly GameConfiguration _gameConfiguration;
-    private Random _random = new();
     private int[,] _visibleWindow;
     private int _totalAmountWon = 0;
     private int _totalAmountWagered = 0;
