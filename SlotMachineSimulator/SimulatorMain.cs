@@ -32,13 +32,18 @@ public class SimulatorMain
         {
             _totalAmountWon = 0;
             _totalAmountWagered = 0;
-            _numberOfSpins = 3;
+
+            _numberOfSpins = 1000000;
 
             Console.WriteLine($"Running {_gameConfiguration.Name} Simulator...");
-            Console.WriteLine($"{Environment.NewLine}");
 
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
+            string[] outputs = [];
+            if (_gameConfiguration.PrintOutput)
+            {
+                outputs = new string[_numberOfSpins];
+            }
+
+            var stopWatch = Stopwatch.StartNew();
 
             Parallel.For(0, _numberOfSpins,
                 () => (
@@ -49,9 +54,14 @@ public class SimulatorMain
                 (i, state, local) =>
                 {
                     int wager = _gameConfiguration.BetInfo; 
-                    int winnings = Spin(local.rng);
+                    var spinResult = Spin(local.rng);
 
-                    local.localWinnings += winnings;
+                    if (_gameConfiguration.PrintOutput)
+                    {
+                        outputs[i] = spinResult.Output;
+
+                    }                    
+                    local.localWinnings += spinResult.Winnings;
                     local.localWagered += wager;
 
                     return local;
@@ -69,6 +79,15 @@ public class SimulatorMain
             ts.Milliseconds / 10);
 
             Console.WriteLine("RunTime " + elapsedTime);
+            Console.WriteLine();
+
+            if (_gameConfiguration.PrintOutput)
+            {
+                for (int i = 0; i < _numberOfSpins; i++)
+                {
+                    Console.Write(outputs[i]);
+                }
+            }
 
             Console.WriteLine();
             Console.WriteLine($"Number of spins: {_numberOfSpins}");
@@ -84,7 +103,7 @@ public class SimulatorMain
 }
     }
 
-    public int Spin(Random rng)
+    public SpinResult Spin(Random rng)
     {
         var numVisibleWindowColumns = _gameConfiguration.VisibleArea.Columns;
         var numVisibleWindowRows = _gameConfiguration.VisibleArea.Rows;
@@ -126,29 +145,27 @@ public class SimulatorMain
                 }
             } // loop visible window to fill it with symbol values
 
-            // Display symbols for the visible window for the current spin per project
-            // requirements.
-            int maxWidth = 0;
-            foreach (var symbol in visibleWindowSymbols)
-            {
-                if (symbol is not null && symbol.Length > maxWidth)
-                    maxWidth = symbol.Length;
-            }
-
+            // Display symbols for the visible window for the current spin per project requirements.
             var spinOutputStr = new StringBuilder();
-            for (int r = 0; r < numVisibleWindowRows; r++)
+            if (_gameConfiguration.PrintOutput)
             {
-                for (int c = 0; c < numVisibleWindowColumns; c++)
+                int maxWidth = 0;
+                for (int i = 0; i < windowLength; i++)
                 {
-                    spinOutputStr.Append(visibleWindowSymbols[r * numVisibleWindowColumns + c].PadRight(maxWidth + 2));
+                    var symbol = visibleWindowSymbols[i];
+                    if (symbol.Length > maxWidth)
+                        maxWidth = symbol.Length;
+                }
+                
+                for (int r = 0; r < numVisibleWindowRows; r++)
+                {
+                    for (int c = 0; c < numVisibleWindowColumns; c++)
+                    {
+                        spinOutputStr.Append(visibleWindowSymbols[r * numVisibleWindowColumns + c].PadRight(maxWidth + 2));
+                    }
+                    spinOutputStr.AppendLine();
                 }
                 spinOutputStr.AppendLine();
-            }
-            spinOutputStr.AppendLine();
-
-            lock (_lock)
-            {
-                Console.Write(spinOutputStr.ToString());
             }
 
             var totalSpinWinningAmount = 0;
@@ -172,8 +189,11 @@ public class SimulatorMain
                 }
             } // loop paylines
 
-            return totalSpinWinningAmount;
-
+            return new SpinResult
+            {
+                Winnings = totalSpinWinningAmount,
+                Output = spinOutputStr.ToString()
+            };
         }
         finally
         {
