@@ -23,6 +23,6 @@ using IHost host = builder.Build();
 
 // Resolve and run the main class
 var simulatorMain = host.Services.GetRequiredService<SimulatorMain>();
-await simulatorMain.RunAsync();
+simulatorMain.RunSimulation();
 
 Console.ReadKey();
