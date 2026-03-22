@@ -1,0 +1,8 @@
+﻿namespace SlotMachineSimulator.Config;
+
+public class PayItem
+{
+    public string ExactMatch { get; set; }
+
+    public int Amount { get; set; }
+}

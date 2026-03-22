@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+	<Game name="BasicSlotGame">
+		<BetInfo Amount="100" />
+		<VisibleArea Rows="3" Columns="3" />
+		<Paylines name="BasePayLines">
+			<Payline name="line1" VerticalOffsets="1,1,1" />
+			<Payline name="line2" VerticalOffsets="0,0,0" />
+			<Payline name="line3" VerticalOffsets="2,2,2" />
+			<Payline name="line4" VerticalOffsets="0,1,2" />
+			<Payline name="line5" VerticalOffsets="2,1,0" />
+		</Paylines>
+		<Symbols name="baseSymbols">
+			<Symbol name="Ace" />
+			<Symbol name="King" />
+			<Symbol name="Queen" />
+			<Symbol name="Jack" />
+			<Symbol name="Ten" />
+			<Symbol name="Nine" />
+		</Symbols>
+		<Reels name="ReelStrips">
+			<Reel name="reel1" Symbols="Nine,King,Ten,Queen,Jack,Ace" />
+			<Reel name="reel2" Symbols="Nine,King,Ten,Ace,Jack,Queen" />
+			<Reel name="reel3" Symbols="Nine,King,Ten,Ace,Nine,Jack,Queen" />
+		</Reels>
+		<PayTable name="BasePayTable">
+			<Pay ExactMatch="Ace,Ace,Ace" Amount="2500" />
+			<Pay ExactMatch="King,King,King" Amount="1200" />
+			<Pay ExactMatch="Queen,Queen,Queen" Amount="700" />
+			<Pay ExactMatch="Jack,Jack,Jack" Amount="200" />
+			<Pay ExactMatch="Ten,Ten,Ten" Amount="150" />
+			<Pay ExactMatch="Nine,Nine,Nine" Amount="120" />
+		</PayTable>
+	</Game>
+  <Sport name="Football">
+  </Sport>
+</configuration>
