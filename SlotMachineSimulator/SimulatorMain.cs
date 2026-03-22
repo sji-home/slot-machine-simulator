@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using SlotMachineSimulator.Config;
+using System.Text;
 
 namespace SlotMachineSimulator;
 
@@ -11,7 +12,7 @@ public class SimulatorMain
     private readonly GameConfiguration _gameConfiguration;
     private long _totalAmountWon = 0;
     private long _totalAmountWagered = 0;
-    private long _numberOfSpins = 100000;
+    private long _numberOfSpins = 100;
 
     public SimulatorMain(
         IHostApplicationLifetime appLifetime, 
@@ -53,6 +54,7 @@ public class SimulatorMain
                     Interlocked.Add(ref _totalAmountWagered, local.localWagered);
                 });
 
+            Console.WriteLine();
             Console.WriteLine($"Number of spins: {_numberOfSpins}.");
             Console.WriteLine($"Total amount won: {_totalAmountWon.ToString("C2")} {Environment.NewLine}Total amount wagered: {_totalAmountWagered.ToString("C2")}");
         }
@@ -74,6 +76,7 @@ public class SimulatorMain
         var numReelStrips = _gameConfiguration.ReelStrips.Count;
 
         int[,] visibleWindow = new int[numVisibleWindowRows, numVisibleWindowColumns];
+        string[,] visibleWindowSymbols = new string[numVisibleWindowRows, numVisibleWindowColumns];
         int[] currentRowIndexes = new int[numReelStrips];
 
         // Generate random numbers for each reel at the zero offset position.
@@ -81,12 +84,6 @@ public class SimulatorMain
         {
             currentRowIndexes[i] = rng.Next(_gameConfiguration.ReelStrips[i].Length);
         }
-
-        //test  matches [0,1,2] for Jacks
-        //randomNumbers.Add(4);
-        //randomNumbers.Add(3);
-        //randomNumbers.Add(3);
-        //test
 
         for (int r = 0; r < numVisibleWindowRows; r++)
         {
@@ -105,8 +102,24 @@ public class SimulatorMain
                 var symbol = _gameConfiguration.ReelStrips[c][currentRowIndexes[c]];
                 var symbolValue = _gameConfiguration.BaseSymbolDictionary[symbol];
                 visibleWindow[r, c] = symbolValue;
+                visibleWindowSymbols[r, c] = symbol;
             }
-        } // loop visible window
+        } // loop visible window to fill it with symbol values
+
+        // Display symbols for the visible window for the current spin per project
+        // requirements.
+        var spinOutputStr = new StringBuilder();
+        for (int r = 0; r < numVisibleWindowRows; r++)
+        {
+            for (int c = 0; c < numVisibleWindowColumns; c++)
+            {
+                spinOutputStr.Append(visibleWindowSymbols[r, c]);
+                spinOutputStr.Append(' ');
+            }
+            spinOutputStr.AppendLine();
+        }
+        spinOutputStr.AppendLine();
+        Console.Write(spinOutputStr.ToString());
 
         foreach (var payline in _gameConfiguration.PaylineVerticalOffsets)
         {
