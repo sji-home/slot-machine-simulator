@@ -14,7 +14,6 @@ public class SimulatorMain
     private readonly GameConfiguration _gameConfiguration;
     private long _totalAmountWon;
     private long _totalAmountWagered;
-    private long _numberOfSpins;
     private static int _seed = Environment.TickCount;
     private static readonly object _lock = new();
 
@@ -33,19 +32,18 @@ public class SimulatorMain
             _totalAmountWon = 0;
             _totalAmountWagered = 0;
 
-            _numberOfSpins = 1000000;
-
             Console.WriteLine($"Running {_gameConfiguration.Name} Simulator...");
+            Console.WriteLine();
 
             string[] outputs = [];
             if (_gameConfiguration.PrintOutput)
             {
-                outputs = new string[_numberOfSpins];
+                outputs = new string[_gameConfiguration.NumberOfSpins];
             }
 
             var stopWatch = Stopwatch.StartNew();
 
-            Parallel.For(0, _numberOfSpins,
+            Parallel.For(0, _gameConfiguration.NumberOfSpins,
                 () => (
                     localWinnings: 0,
                     localWagered: 0,
@@ -78,20 +76,21 @@ public class SimulatorMain
             ts.Hours, ts.Minutes, ts.Seconds,
             ts.Milliseconds / 10);
 
-            Console.WriteLine("RunTime " + elapsedTime);
-            Console.WriteLine();
-
             if (_gameConfiguration.PrintOutput)
             {
-                for (int i = 0; i < _numberOfSpins; i++)
+                for (int i = 0; i < _gameConfiguration.NumberOfSpins; i++)
                 {
                     Console.Write(outputs[i]);
                 }
             }
 
             Console.WriteLine();
-            Console.WriteLine($"Number of spins: {_numberOfSpins}");
+            Console.WriteLine($"Number of spins: {_gameConfiguration.NumberOfSpins}");
             Console.WriteLine($"Total amount won: {_totalAmountWon.ToString("C2")} {Environment.NewLine}Total amount wagered: {_totalAmountWagered.ToString("C2")}");
+
+            Console.WriteLine();
+            Console.WriteLine("RunTime " + elapsedTime);
+            Console.WriteLine();
         }
         catch (Exception ex)
         {

@@ -7,6 +7,7 @@ public sealed class GameConfiguration
     public string Name { get; set; }
     public int BetInfo { get; set; }
     public bool PrintOutput { get; set; }
+    public int NumberOfSpins { get; set; }
     public VisibleArea VisibleArea { get; set; }
 
     public List<List<int>> PaylineVerticalOffsets { get; set; } = new();
