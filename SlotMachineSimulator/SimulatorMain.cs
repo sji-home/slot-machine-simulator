@@ -127,9 +127,10 @@ public class SimulatorMain
         spinOutputStr.AppendLine();
         Console.Write(spinOutputStr.ToString());
 
+        var totalSpinWinningAmount = 0;
         foreach (var payline in _gameConfiguration.PaylineVerticalOffsets)
         {
-            // For each payline, obtain the corresponding values from the window using the payline's offsets, pack it and check if
+            // For each payline, obtain the corresponding values from the window using the payline's offsets, encode it and check if
             // the resulting hashKey matches any of the hashKeys in the PayTableDictionay.
             var reelOneCellValue = visibleWindow[payline[0], 0];
             var reelTwoCellValue = visibleWindow[payline[1], 1];
@@ -141,13 +142,13 @@ public class SimulatorMain
                 reelThreeCellValue, 
                 _gameConfiguration.BaseSymbols.Count);
 
-            if (_gameConfiguration.PayTableDictionay.TryGetValue(hashKeyFromWindow, out int winningAmount))
+            if (_gameConfiguration.PayTableDictionay.TryGetValue(hashKeyFromWindow, out int spinWinningAmount))
             {
-                return winningAmount;
+                totalSpinWinningAmount += spinWinningAmount;
             }
         } // loop paylines
 
-        return 0; 
+        return totalSpinWinningAmount; 
     }
 
 }
