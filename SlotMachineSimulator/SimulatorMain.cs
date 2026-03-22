@@ -10,9 +10,9 @@ public class SimulatorMain
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly GameConfiguration _gameConfiguration;
     private int[,] _visibleWindow;
-    private int _totalAmountWon = 0;
-    private int _totalAmountWagered = 0;
-    private int _numberOfSpins = 100000;
+    private long _totalAmountWon = 0;
+    private long _totalAmountWagered = 0;
+    private long _numberOfSpins = 100000;
 
     public SimulatorMain(
         IHostApplicationLifetime appLifetime, 
@@ -146,12 +146,15 @@ public class SimulatorMain
                 reelThreeCellValue, 
                 _gameConfiguration.BaseSymbols.Count);
 
-            if (_gameConfiguration.PayTableDictionay.ContainsKey(hashKeyFromWindow))
+            if (_gameConfiguration.PayTableDictionay.TryGetValue(hashKeyFromWindow, out winningAmount))
             {
                 foundMatch = true;
-                winningAmount = _gameConfiguration.PayTableDictionay[hashKeyFromWindow];
                 //Console.WriteLine($"matched");
                 break;
+            }
+            else
+            {
+                throw new Exception($"HashKey {hashKeyFromWindow} not found in PayTableDictionay");
             }
         } // loop paylines
 
