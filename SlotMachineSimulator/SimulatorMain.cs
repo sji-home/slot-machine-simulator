@@ -12,7 +12,7 @@ public class SimulatorMain
     private readonly GameConfiguration _gameConfiguration;
     private long _totalAmountWon = 0;
     private long _totalAmountWagered = 0;
-    private long _numberOfSpins = 100;
+    private long _numberOfSpins = 5;
 
     public SimulatorMain(
         IHostApplicationLifetime appLifetime, 
@@ -108,13 +108,19 @@ public class SimulatorMain
 
         // Display symbols for the visible window for the current spin per project
         // requirements.
+        int maxWidth = 0;
+        foreach (var symbol in visibleWindowSymbols)
+        {
+            if (symbol.Length > maxWidth)
+                maxWidth = symbol.Length;
+        }
+
         var spinOutputStr = new StringBuilder();
         for (int r = 0; r < numVisibleWindowRows; r++)
         {
             for (int c = 0; c < numVisibleWindowColumns; c++)
             {
-                spinOutputStr.Append(visibleWindowSymbols[r, c]);
-                spinOutputStr.Append(' ');
+                spinOutputStr.Append(visibleWindowSymbols[r, c].PadRight(maxWidth + 2));
             }
             spinOutputStr.AppendLine();
         }
@@ -129,7 +135,7 @@ public class SimulatorMain
             var reelTwoCellValue = visibleWindow[payline[1], 1];
             var reelThreeCellValue = visibleWindow[payline[2], 2];
 
-            var hashKeyFromWindow = PatternEncoder.Pack(
+            var hashKeyFromWindow = PatternEncoder.EncodePaylineKey(
                 reelOneCellValue, 
                 reelTwoCellValue, 
                 reelThreeCellValue, 
@@ -141,7 +147,7 @@ public class SimulatorMain
             }
         } // loop paylines
 
-        return 0; // no win
+        return 0; 
     }
 
 }

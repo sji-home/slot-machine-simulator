@@ -44,7 +44,7 @@ public sealed class GameConfiguration
                 }
             }
 
-            hashKey = PatternEncoder.Pack(matchArray, this.BaseSymbols.Count);
+            hashKey = PatternEncoder.EncodePaylineKey(matchArray, this.BaseSymbols.Count);
             payTableDictionay.Add(hashKey, payItem.Amount);
         } // loop BasePayTable
 
@@ -64,7 +64,7 @@ public sealed class GameConfiguration
             var c2 = this.PaylineVerticalOffsets[r][1];
             var c3 = this.PaylineVerticalOffsets[r][2];
 
-            paylineHashSet.Add(PatternEncoder.Pack(c1, c2, c3, symbolCount));
+            paylineHashSet.Add(PatternEncoder.EncodePaylineKey(c1, c2, c3, symbolCount));
         }
         return paylineHashSet;
     }
