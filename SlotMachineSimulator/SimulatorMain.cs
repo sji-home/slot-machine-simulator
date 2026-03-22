@@ -9,7 +9,6 @@ public class SimulatorMain
 {
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly GameConfiguration _gameConfiguration;
-    private int[,] _visibleWindow;
     private long _totalAmountWon = 0;
     private long _totalAmountWagered = 0;
     private long _numberOfSpins = 100000;
@@ -20,7 +19,6 @@ public class SimulatorMain
     {
         _appLifetime = appLifetime;
         _gameConfiguration = gameConfiguration.Value;
-        _visibleWindow = new int[_gameConfiguration.VisibleArea.Rows, _gameConfiguration.VisibleArea.Columns];
     }
 
     public async Task RunAsync()
@@ -71,14 +69,17 @@ public class SimulatorMain
 
     public int Spin(Random rng)
     {
-        var randomNumbers = new List<int>();
-        var randomIndex = 0;
+        var numVisibleWindowColumns = _gameConfiguration.VisibleArea.Columns;
+        var numVisibleWindowRows = _gameConfiguration.VisibleArea.Rows;
+        var numReelStrips = _gameConfiguration.ReelStrips.Count;
+
+        int[,] visibleWindow = new int[numVisibleWindowRows, numVisibleWindowColumns];
+        int[] currentRowIndexes = new int[numReelStrips];
 
         // Generate random numbers for each reel at the zero offset position.
-        for (int i = 0; i < _gameConfiguration.ReelStrips.Count; i++)
+        for (int i = 0; i < numReelStrips; i++)
         {
-            randomIndex = rng.Next(_gameConfiguration.ReelStrips[i].Length);
-            randomNumbers.Add(randomIndex);
+            currentRowIndexes[i] = rng.Next(_gameConfiguration.ReelStrips[i].Length);
         }
 
         //test  matches [0,1,2] for Jacks
@@ -87,82 +88,47 @@ public class SimulatorMain
         //randomNumbers.Add(3);
         //test
 
-        var numVisibleWindowColumns = _gameConfiguration.VisibleArea.Columns;
-        var numVisibleWindowRows = _gameConfiguration.VisibleArea.Rows;
-
-        var symbol = string.Empty;
-        var symbolValue = -1;
-        var reelIx = -1;
-
-        // Populate the visible window array
-        var currentRowIndexes = new List<int>();
-        currentRowIndexes.AddRange(randomNumbers);
-
-        // loop rows
         for (int r = 0; r < numVisibleWindowRows; r++)
         {
-            // loop columns
             for (int c = 0; c < numVisibleWindowColumns; c++)
             {
-                if (r == 0)
+                if (r != 0)
                 {
-                    symbol = _gameConfiguration.ReelStrips[c][currentRowIndexes[c]];
-                    symbolValue = _gameConfiguration.BaseSymbolDictionary[symbol];
-                    _visibleWindow[r, c] = symbolValue;
-                }
-                else
-                {
-                    reelIx = currentRowIndexes[c] + 1;
+                    var reelIx = currentRowIndexes[c] + 1;
                     if (reelIx >= _gameConfiguration.ReelStrips[c].Length)
                     {
                         reelIx = 0;
                     }
                     currentRowIndexes[c] = reelIx;
-                    symbol = _gameConfiguration.ReelStrips[c][currentRowIndexes[c]];
-                    symbolValue = _gameConfiguration.BaseSymbolDictionary[symbol];
-                    _visibleWindow[r, c] = symbolValue;
                 }
-            }
-        } // loop window
 
-        var hashKeyFromWindow = 0;
-        var reelOneCellValue = 0;
-        var reelTwoCellValue = 0;
-        var reelThreeCellValue = 0;
-        int winningAmount = 0;
-        var foundMatch = false;
+                var symbol = _gameConfiguration.ReelStrips[c][currentRowIndexes[c]];
+                var symbolValue = _gameConfiguration.BaseSymbolDictionary[symbol];
+                visibleWindow[r, c] = symbolValue;
+            }
+        } // loop visible window
 
         foreach (var payline in _gameConfiguration.PaylineVerticalOffsets)
         {
             // For each payline, obtain the corresponding values from the window using the payline's offsets, pack it and check if
             // the resulting hashKey matches any of the hashKeys in the PayTableDictionay.
-            reelOneCellValue = _visibleWindow[payline[0], 0];
-            reelTwoCellValue = _visibleWindow[payline[1], 1];
-            reelThreeCellValue = _visibleWindow[payline[2], 2];
+            var reelOneCellValue = visibleWindow[payline[0], 0];
+            var reelTwoCellValue = visibleWindow[payline[1], 1];
+            var reelThreeCellValue = visibleWindow[payline[2], 2];
 
-            hashKeyFromWindow = PatternEncoder.Pack(
+            var hashKeyFromWindow = PatternEncoder.Pack(
                 reelOneCellValue, 
                 reelTwoCellValue, 
                 reelThreeCellValue, 
                 _gameConfiguration.BaseSymbols.Count);
 
-            if (_gameConfiguration.PayTableDictionay.TryGetValue(hashKeyFromWindow, out winningAmount))
+            if (_gameConfiguration.PayTableDictionay.TryGetValue(hashKeyFromWindow, out int winningAmount))
             {
-                foundMatch = true;
-                //Console.WriteLine($"matched");
-                break;
-            }
-            else
-            {
-                throw new Exception($"HashKey {hashKeyFromWindow} not found in PayTableDictionay");
+                return winningAmount;
             }
         } // loop paylines
 
-        if (!foundMatch)
-        {
-            //Console.WriteLine($"no match");
-        }
-        return winningAmount;
+        return 0; // no win
     }
 
 }
