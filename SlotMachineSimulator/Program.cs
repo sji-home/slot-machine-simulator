@@ -11,11 +11,16 @@ builder.Configuration.Sources.Clear();
 IHostEnvironment env = builder.Environment;
 
 builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 
 // register configuration and services
 builder.Services.Configure<GameConfiguration>(
     builder.Configuration.GetSection(key: nameof(GameConfiguration)));
+
+builder.Services.PostConfigure<GameConfiguration>(config =>
+{
+    config.InitializeDerivedData();
+});
 
 builder.Services.AddSingleton<SimulatorMain>();
 

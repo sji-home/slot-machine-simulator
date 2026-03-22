@@ -182,7 +182,7 @@ public class SimulatorMain
                     reelThreeCellValue,
                     _gameConfiguration.BaseSymbols.Count);
 
-                if (_gameConfiguration.PayTableDictionay.TryGetValue(hashKeyFromWindow, out int spinWinningAmount))
+                if (_gameConfiguration.PayTableDictionary.TryGetValue(hashKeyFromWindow, out int spinWinningAmount))
                 {
                     totalSpinWinningAmount += spinWinningAmount;
                 }

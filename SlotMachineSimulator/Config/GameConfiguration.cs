@@ -4,22 +4,41 @@ namespace SlotMachineSimulator.Config;
 
 public sealed class GameConfiguration
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int BetInfo { get; set; }
     public bool PrintOutput { get; set; }
     public int NumberOfSpins { get; set; }
     public VisibleArea VisibleArea { get; set; }
 
     public List<List<int>> PaylineVerticalOffsets { get; set; } = new();
+    public List<string> BaseSymbols { get; set; } = new();
+    public List<string[]> ReelStrips { get; set; } = new();
+    public List<PayItem> BasePayTable { get; set; } = new();
 
-    public List<string> BaseSymbols { get; set; } = [];
-    public Dictionary<string, int> BaseSymbolDictionary => InitializeBaseSymbolDictionary();
-    public List<string[]> ReelStrips { get; set; }
-    public Dictionary<int, int> PayTableDictionay => InitializePayTableDictionary();
-    public List<PayItem> BasePayTable { get; set; } = [];
+    // Derived data, these are computed once.
+    public Dictionary<string, int> BaseSymbolDictionary { get; private set; } = new();
+    public Dictionary<int, int> PayTableDictionary { get; private set; } = new();
 
+    //public HashSet<int> PaylineHashSet { get; private set; } = new();
+    public int[] PayoutByKey { get; private set; } = Array.Empty<int>();
 
-    public Dictionary<int, int> InitializePayTableDictionary()
+    public void InitializeDerivedData()
+    {
+        BaseSymbolDictionary = InitializeBaseSymbolDictionary();
+        PayTableDictionary = InitializePayTableDictionary();
+        //PaylineHashSet = InitializePaylineHashSet();
+        PayoutByKey = InitializePayoutKey();
+    }
+
+    private int[] InitializePayoutKey()
+    {
+        // Because with base 6 and 3 positions, the total number of combinations is only: 6^3 = 216
+        int[] payoutByKey = new int[216];
+
+        return null;
+    }
+
+    private Dictionary<int, int> InitializePayTableDictionary()
     {
         string[] matchStringArray = null;
         int[] matchArray = null;
@@ -53,25 +72,25 @@ public sealed class GameConfiguration
         return payTableDictionay;
     }
 
-    public HashSet<int> InitializePaylineHashSet()
-    {
-        var symbolCount = this.BaseSymbols.Count;
-        var payLineRowCount = this.PaylineVerticalOffsets.Count;
+    //public HashSet<int> InitializePaylineHashSet()
+    //{
+    //    var symbolCount = this.BaseSymbols.Count;
+    //    var payLineRowCount = this.PaylineVerticalOffsets.Count;
 
-        var paylineHashSet = new HashSet<int>();
+    //    var paylineHashSet = new HashSet<int>();
 
-        for (int r = 0; r < payLineRowCount; r++)
-        {
-            var c1 = this.PaylineVerticalOffsets[r][0];
-            var c2 = this.PaylineVerticalOffsets[r][1];
-            var c3 = this.PaylineVerticalOffsets[r][2];
+    //    for (int r = 0; r < payLineRowCount; r++)
+    //    {
+    //        var c1 = this.PaylineVerticalOffsets[r][0];
+    //        var c2 = this.PaylineVerticalOffsets[r][1];
+    //        var c3 = this.PaylineVerticalOffsets[r][2];
 
-            paylineHashSet.Add(PatternEncoder.EncodePaylineKey(c1, c2, c3, symbolCount));
-        }
-        return paylineHashSet;
-    }
+    //        paylineHashSet.Add(PatternEncoder.EncodePaylineKey(c1, c2, c3, symbolCount));
+    //    }
+    //    return paylineHashSet;
+    //}
 
-    public Dictionary<string, int> InitializeBaseSymbolDictionary()
+    private Dictionary<string, int> InitializeBaseSymbolDictionary()
     {
         var baseSymbolDictionary = new Dictionary<string, int>();
         int i = 0;
