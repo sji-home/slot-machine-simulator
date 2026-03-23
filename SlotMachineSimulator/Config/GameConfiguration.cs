@@ -17,77 +17,82 @@ public sealed class GameConfiguration
 
     // Derived data, these are computed once.
     public Dictionary<string, int> BaseSymbolDictionary { get; private set; } = new();
-    public Dictionary<int, int> PayTableDictionary { get; private set; } = new();
+    //public Dictionary<int, int> PayTableDictionary { get; private set; } = new();
 
-    //public HashSet<int> PaylineHashSet { get; private set; } = new();
-    public int[] PayoutByKey { get; private set; } = Array.Empty<int>();
+    public int[] PayoutByKey { get; private set; } = [];
 
     public void InitializeDerivedData()
     {
         BaseSymbolDictionary = InitializeBaseSymbolDictionary();
-        PayTableDictionary = InitializePayTableDictionary();
-        //PaylineHashSet = InitializePaylineHashSet();
+        //PayTableDictionary = InitializePayTableDictionary();
         PayoutByKey = InitializePayoutKey();
     }
 
     private int[] InitializePayoutKey()
     {
         // Because with base 6 and 3 positions, the total number of combinations is only: 6^3 = 216
-        int[] payoutByKey = new int[216];
+        int symbolCount = BaseSymbols.Count;
+        int combinations = symbolCount * symbolCount * symbolCount;
 
-        return null;
-    }
+        var payoutByKey = new int[combinations];
 
-    private Dictionary<int, int> InitializePayTableDictionary()
-    {
-        string[] matchStringArray = null;
-        int[] matchArray = null;
-        var symbolValue = -1;
-        int hashKey = -1;
-
-        var payTableDictionay = new Dictionary<int, int>();
-
-        foreach (var payItem in this.BasePayTable)
+        foreach (var payItem in BasePayTable)
         {
-            matchStringArray = payItem.ExactMatch.Split(',');
-            matchArray = new int[matchStringArray.Length];
+            string[] matchStringArray = payItem.ExactMatch.Split(',');
+            int[] matchArray = new int[matchStringArray.Length];
 
             for (int i = 0; i < matchStringArray.Length; i++)
             {
-                var symbol = matchStringArray[i];
-                if (this.BaseSymbolDictionary.TryGetValue(symbol, out symbolValue))
+                string symbol = matchStringArray[i].Trim();
+
+                if (!BaseSymbolDictionary.TryGetValue(symbol, out int symbolValue))
                 {
-                    matchArray[i] = symbolValue;
+                    throw new InvalidOperationException(
+                        $"Symbol '{symbol}' not found in BaseSymbolDictionary.");
                 }
-                else
-                {
-                    throw new Exception($"Symbol {symbol} not found in BaseSymbolDictionary");
-                }
+
+                matchArray[i] = symbolValue;
             }
 
-            hashKey = PatternEncoder.EncodePaylineKey(matchArray, this.BaseSymbols.Count);
-            payTableDictionay.Add(hashKey, payItem.Amount);
-        } // loop BasePayTable
+            int key = PatternEncoder.EncodePaylineKey(matchArray, symbolCount);
+            payoutByKey[key] = payItem.Amount;
+        }
 
-        return payTableDictionay;
+        return payoutByKey;
     }
 
-    //public HashSet<int> InitializePaylineHashSet()
+    //private Dictionary<int, int> InitializePayTableDictionary()
     //{
-    //    var symbolCount = this.BaseSymbols.Count;
-    //    var payLineRowCount = this.PaylineVerticalOffsets.Count;
+    //    string[] matchStringArray = null;
+    //    int[] matchArray = null;
+    //    var symbolValue = -1;
+    //    int key = -1;
 
-    //    var paylineHashSet = new HashSet<int>();
+    //    var payTableDictionay = new Dictionary<int, int>();
 
-    //    for (int r = 0; r < payLineRowCount; r++)
+    //    foreach (var payItem in this.BasePayTable)
     //    {
-    //        var c1 = this.PaylineVerticalOffsets[r][0];
-    //        var c2 = this.PaylineVerticalOffsets[r][1];
-    //        var c3 = this.PaylineVerticalOffsets[r][2];
+    //        matchStringArray = payItem.ExactMatch.Split(',');
+    //        matchArray = new int[matchStringArray.Length];
 
-    //        paylineHashSet.Add(PatternEncoder.EncodePaylineKey(c1, c2, c3, symbolCount));
-    //    }
-    //    return paylineHashSet;
+    //        for (int i = 0; i < matchStringArray.Length; i++)
+    //        {
+    //            var symbol = matchStringArray[i].Trim();
+    //            if (this.BaseSymbolDictionary.TryGetValue(symbol, out symbolValue))
+    //            {
+    //                matchArray[i] = symbolValue;
+    //            }
+    //            else
+    //            {
+    //                throw new InvalidOperationException($"Symbol {symbol} not found in BaseSymbolDictionary");
+    //            }
+    //        }
+
+    //        key = PatternEncoder.EncodePaylineKey(matchArray, this.BaseSymbols.Count);
+    //        payTableDictionay.Add(key, payItem.Amount);
+    //    } // loop BasePayTable
+
+    //    return payTableDictionay;
     //}
 
     private Dictionary<string, int> InitializeBaseSymbolDictionary()

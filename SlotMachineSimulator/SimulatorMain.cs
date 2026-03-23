@@ -84,13 +84,11 @@ public class SimulatorMain
                 }
             }
 
-            Console.WriteLine();
             Console.WriteLine($"Number of spins: {_gameConfiguration.NumberOfSpins}");
             Console.WriteLine($"Total amount won: {_totalAmountWon.ToString("C2")} {Environment.NewLine}Total amount wagered: {_totalAmountWagered.ToString("C2")}");
 
             Console.WriteLine();
             Console.WriteLine("RunTime " + elapsedTime);
-            Console.WriteLine();
         }
         catch (Exception ex)
         {
@@ -171,21 +169,27 @@ public class SimulatorMain
             foreach (var payline in _gameConfiguration.PaylineVerticalOffsets)
             {
                 // For each payline, obtain the corresponding values from the window using the payline's offsets, encode it and check if
-                // the resulting hashKey matches any of the hashKeys in the PayTableDictionay.
+                // the resulting key matches any of the keys in the PayoutByKey array.
                 int reelOneCellValue = visibleWindow[payline[0] * numVisibleWindowColumns + 0];
                 int reelTwoCellValue = visibleWindow[payline[1] * numVisibleWindowColumns + 1];
                 int reelThreeCellValue = visibleWindow[payline[2] * numVisibleWindowColumns + 2];
 
-                var hashKeyFromWindow = PatternEncoder.EncodePaylineKey(
+                var keyFromWindow = PatternEncoder.EncodePaylineKey(
                     reelOneCellValue,
                     reelTwoCellValue,
                     reelThreeCellValue,
                     _gameConfiguration.BaseSymbols.Count);
 
-                if (_gameConfiguration.PayTableDictionary.TryGetValue(hashKeyFromWindow, out int spinWinningAmount))
+                var payout = _gameConfiguration.PayoutByKey[keyFromWindow];
+                if (payout > 0)
                 {
-                    totalSpinWinningAmount += spinWinningAmount;
+                    totalSpinWinningAmount += payout;
                 }
+
+                //if (_gameConfiguration.PayTableDictionary.TryGetValue(keyFromWindow, out int spinWinningAmount))
+                //{
+                //    totalSpinWinningAmount += spinWinningAmount;
+                //}
             } // loop paylines
 
             return new SpinResult
