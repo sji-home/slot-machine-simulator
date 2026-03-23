@@ -39,9 +39,16 @@ public sealed class GameConfiguration
         foreach (var payItem in BasePayTable)
         {
             string[] matchStringArray = payItem.ExactMatch.Split(',');
-            int[] matchArray = new int[matchStringArray.Length];
 
-            for (int i = 0; i < matchStringArray.Length; i++)
+            if (matchStringArray.Length != 3)
+            {
+                throw new InvalidOperationException(
+                    $"Pay item '{payItem.ExactMatch}' must contain exactly 3 symbols.");
+            }
+
+            int[] matchArray = new int[3];
+
+            for (int i = 0; i < 3; i++)
             {
                 string symbol = matchStringArray[i].Trim();
 
@@ -97,15 +104,22 @@ public sealed class GameConfiguration
 
     private Dictionary<string, int> InitializeBaseSymbolDictionary()
     {
-        var baseSymbolDictionary = new Dictionary<string, int>();
-        int i = 0;
-        foreach (var symbol in this.BaseSymbols)
+        var baseSymbolDictionary = new Dictionary<string, int>(this.BaseSymbols.Count);
+
+        for (int i = 0; i < BaseSymbols.Count; i++)
         {
-            baseSymbolDictionary.Add(symbol, i++);
+            string symbol = BaseSymbols[i];
+
+            if (baseSymbolDictionary.ContainsKey(symbol))
+            {
+                throw new InvalidOperationException(
+                    $"Duplicate symbol '{symbol}' found in BaseSymbols.");
+            }
+
+            baseSymbolDictionary.Add(symbol, i);
         }
+
         return baseSymbolDictionary;
     }
-
-
 
 }

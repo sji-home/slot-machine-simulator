@@ -1,5 +1,4 @@
 ﻿using Common;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using SlotMachineSimulator.Config;
 using System.Buffers;
@@ -10,18 +9,13 @@ namespace SlotMachineSimulator;
 
 public class SimulatorMain
 {
-    private readonly IHostApplicationLifetime _appLifetime;
     private readonly GameConfiguration _gameConfiguration;
     private long _totalAmountWon;
     private long _totalAmountWagered;
     private static int _seed = Environment.TickCount;
-    private static readonly object _lock = new();
 
-    public SimulatorMain(
-        IHostApplicationLifetime appLifetime, 
-        IOptions<GameConfiguration> gameConfiguration)
+    public SimulatorMain(IOptions<GameConfiguration> gameConfiguration)
     {
-        _appLifetime = appLifetime;
         _gameConfiguration = gameConfiguration.Value;
     }
 
@@ -94,10 +88,6 @@ public class SimulatorMain
         {
             Console.WriteLine($"An error occurred during simulation: {ex.Message}");
         }
-        finally
-        {
-            _appLifetime.StopApplication();
-}
     }
 
     public SpinResult Spin(Random rng)
@@ -143,9 +133,10 @@ public class SimulatorMain
             } // loop visible window to fill it with symbol values
 
             // Display symbols for the visible window for the current spin per project requirements.
-            var spinOutputStr = new StringBuilder();
+            StringBuilder spinOutputStr = null;
             if (_gameConfiguration.PrintOutput)
             {
+                spinOutputStr = new StringBuilder();
                 int maxWidth = 0;
                 for (int i = 0; i < windowLength; i++)
                 {
@@ -185,17 +176,12 @@ public class SimulatorMain
                 {
                     totalSpinWinningAmount += payout;
                 }
-
-                //if (_gameConfiguration.PayTableDictionary.TryGetValue(keyFromWindow, out int spinWinningAmount))
-                //{
-                //    totalSpinWinningAmount += spinWinningAmount;
-                //}
             } // loop paylines
 
             return new SpinResult
             {
                 Winnings = totalSpinWinningAmount,
-                Output = spinOutputStr.ToString()
+                Output = spinOutputStr?.ToString() ?? string.Empty
             };
         }
         finally
