@@ -1,4 +1,5 @@
 <Solution>
+  <Folder Name="/SlotSpinEngines/" />
   <Project Path="../Common/Common.csproj" Id="b0291763-1a0e-4013-9929-5e70fcff39ff" />
   <Project Path="SlotMachineSimulator.csproj" />
 </Solution>
