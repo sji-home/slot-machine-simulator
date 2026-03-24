@@ -1,4 +1,4 @@
-﻿namespace SlotMachineSimulator.Config;
+﻿namespace Common.Config;
 
 public class PayItem
 {

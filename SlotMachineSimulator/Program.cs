@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SlotMachineSimulator;
-using SlotMachineSimulator.Config;
+using Common;
+using Common.Config;
+using SpinEngineLibrary;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -22,6 +23,7 @@ builder.Services.PostConfigure<GameConfiguration>(config =>
     config.InitializeDerivedData();
 });
 
+builder.Services.AddSingleton<ISpinEngine, ThreeReelSpinEngine>();
 builder.Services.AddSingleton<SimulatorMain>();
 
 using IHost host = builder.Build();

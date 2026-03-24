@@ -1,6 +1,4 @@
-﻿using Common;
-
-namespace SlotMachineSimulator.Config;
+﻿namespace Common.Config;
 
 public sealed class GameConfiguration
 {
@@ -61,7 +59,7 @@ public sealed class GameConfiguration
                 matchArray[i] = symbolValue;
             }
 
-            int key = PatternEncoder.EncodePaylineKey(matchArray, symbolCount);
+            int key = ThreeReelPatternEncoder.EncodePaylineKey(matchArray, symbolCount);
             payoutByKey[key] = payItem.Amount;
         }
 

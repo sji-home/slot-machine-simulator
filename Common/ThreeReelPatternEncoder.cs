@@ -10,7 +10,7 @@
 /// 1. Only 3 symbols are considered.
 /// 2. The symbol values must all be less than symbolCount.
 /// </summary>
-public static class PatternEncoder
+public static class ThreeReelPatternEncoder
 {
     public static int EncodePaylineKey(int a, int b, int c, int symbolCount)
     {

@@ -1,4 +1,4 @@
-﻿namespace SlotMachineSimulator;
+﻿namespace Common;
 
 public sealed class SpinResult
 {
