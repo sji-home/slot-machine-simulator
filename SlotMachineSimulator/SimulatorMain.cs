@@ -51,12 +51,12 @@ public class SimulatorMain
 
                     if (spinResult is null)
                     {
-                        throw new NullReferenceException("Spin result cannot be null.");
+                        throw new InvalidOperationException("Spin result cannot be null.");
                     }
 
                     if (_gameConfiguration.PrintOutput)
                     {
-                        outputs[i] = spinResult?.Output ?? string.Empty;
+                        outputs[i] = spinResult.Output;
                     }                    
                     local.localWinnings += spinResult.Winnings;
                     local.localWagered += wager;

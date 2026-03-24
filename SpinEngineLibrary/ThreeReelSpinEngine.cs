@@ -26,11 +26,11 @@ public class ThreeReelSpinEngine : ISpinEngine
         _symbolCount = _gameConfiguration.BaseSymbols.Count;
     }
 
-    public SpinResult? Spin(Random rng)
+    public SpinResult Spin(Random rng)
     {
         var visibleWindow = ArrayPool<int>.Shared.Rent(_windowLength);
-        var visibleWindowSymbols = ArrayPool<string>.Shared.Rent(_windowLength);
-        var currentRowIndexes = new int[_gameConfiguration.ReelStrips.Count];
+        var visibleWindowSymbols = new string[_windowLength]; 
+        var currentRowIndexes = new int[_numReelStrips];
 
         try
         {
@@ -45,7 +45,6 @@ public class ThreeReelSpinEngine : ISpinEngine
         finally
         {
             ArrayPool<int>.Shared.Return(visibleWindow);
-            ArrayPool<string>.Shared.Return(visibleWindowSymbols, clearArray: true);
         }
     }
 
@@ -91,28 +90,26 @@ public class ThreeReelSpinEngine : ISpinEngine
             return string.Empty;
         }
 
-        StringBuilder? spinOutputBuilder = null;
-        if (_gameConfiguration.PrintOutput)
-        {
-            spinOutputBuilder = new StringBuilder();
-            int maxWidth = 0;
-            for (int i = 0; i < _windowLength; i++)
-            {
-                var symbol = visibleWindowSymbols[i];
-                if (symbol.Length > maxWidth)
-                    maxWidth = symbol.Length;
-            }
+        var spinOutputBuilder = new StringBuilder(); 
+        int maxWidth = 0;
 
-            for (int r = 0; r < _numVisibleWindowRows; r++)
+        for (int i = 0; i < _windowLength; i++)
+        {
+            var symbol = visibleWindowSymbols[i];
+            if (symbol.Length > maxWidth)
+                maxWidth = symbol.Length;
+        }
+
+        for (int r = 0; r < _numVisibleWindowRows; r++)
+        {
+            for (int c = 0; c < _numVisibleWindowColumns; c++)
             {
-                for (int c = 0; c < _numVisibleWindowColumns; c++)
-                {
-                    spinOutputBuilder.Append(visibleWindowSymbols[r * _numVisibleWindowColumns + c].PadRight(maxWidth + 2));
-                }
-                spinOutputBuilder.AppendLine();
+                spinOutputBuilder.Append(visibleWindowSymbols[r * _numVisibleWindowColumns + c].PadRight(maxWidth + 2));
             }
             spinOutputBuilder.AppendLine();
         }
+        spinOutputBuilder.AppendLine();
+
         return spinOutputBuilder.ToString();
     }
 
