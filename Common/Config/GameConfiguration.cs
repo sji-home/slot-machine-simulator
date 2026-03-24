@@ -15,14 +15,12 @@ public sealed class GameConfiguration
 
     // Derived data, these are computed once.
     public Dictionary<string, int> BaseSymbolDictionary { get; private set; } = new();
-    //public Dictionary<int, int> PayTableDictionary { get; private set; } = new();
 
     public int[] PayoutByKey { get; private set; } = [];
 
     public void InitializeDerivedData()
     {
         BaseSymbolDictionary = InitializeBaseSymbolDictionary();
-        //PayTableDictionary = InitializePayTableDictionary();
         PayoutByKey = InitializePayoutKey();
     }
 
@@ -65,40 +63,6 @@ public sealed class GameConfiguration
 
         return payoutByKey;
     }
-
-    //private Dictionary<int, int> InitializePayTableDictionary()
-    //{
-    //    string[] matchStringArray = null;
-    //    int[] matchArray = null;
-    //    var symbolValue = -1;
-    //    int key = -1;
-
-    //    var payTableDictionay = new Dictionary<int, int>();
-
-    //    foreach (var payItem in this.BasePayTable)
-    //    {
-    //        matchStringArray = payItem.ExactMatch.Split(',');
-    //        matchArray = new int[matchStringArray.Length];
-
-    //        for (int i = 0; i < matchStringArray.Length; i++)
-    //        {
-    //            var symbol = matchStringArray[i].Trim();
-    //            if (this.BaseSymbolDictionary.TryGetValue(symbol, out symbolValue))
-    //            {
-    //                matchArray[i] = symbolValue;
-    //            }
-    //            else
-    //            {
-    //                throw new InvalidOperationException($"Symbol {symbol} not found in BaseSymbolDictionary");
-    //            }
-    //        }
-
-    //        key = PatternEncoder.EncodePaylineKey(matchArray, this.BaseSymbols.Count);
-    //        payTableDictionay.Add(key, payItem.Amount);
-    //    } // loop BasePayTable
-
-    //    return payTableDictionay;
-    //}
 
     private Dictionary<string, int> InitializeBaseSymbolDictionary()
     {

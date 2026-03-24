@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using SpinEngineLibrary;
 using System.Diagnostics;
 
-namespace Common;
+namespace SlotMachineSimulator;
 
 public class SimulatorMain
 {
@@ -16,8 +16,8 @@ public class SimulatorMain
     public SimulatorMain(IOptions<GameConfiguration> gameConfiguration,
                          ISpinEngine spinEngine)
     {
-        _gameConfiguration = gameConfiguration.Value;
-        _spinEngine = spinEngine;
+        _gameConfiguration = gameConfiguration.Value ?? throw new ArgumentNullException(nameof(gameConfiguration)); 
+        _spinEngine = spinEngine ?? throw new ArgumentNullException(nameof(spinEngine));
     }
 
     public void RunSimulation()
@@ -49,10 +49,14 @@ public class SimulatorMain
                     int wager = _gameConfiguration.BetInfo; 
                     var spinResult = _spinEngine.Spin(local.rng);
 
+                    if (spinResult is null)
+                    {
+                        throw new NullReferenceException("Spin result cannot be null.");
+                    }
+
                     if (_gameConfiguration.PrintOutput)
                     {
-                        outputs[i] = spinResult.Output;
-
+                        outputs[i] = spinResult?.Output ?? string.Empty;
                     }                    
                     local.localWinnings += spinResult.Winnings;
                     local.localWagered += wager;

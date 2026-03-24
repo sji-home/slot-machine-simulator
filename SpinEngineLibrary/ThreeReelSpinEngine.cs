@@ -9,51 +9,56 @@ namespace SpinEngineLibrary;
 public class ThreeReelSpinEngine : ISpinEngine
 {
     private readonly GameConfiguration _gameConfiguration;
-    private int[] _visibleWindow = [];
-    private string[] _visibleWindowSymbols = [];
-    private int[] _currentRowIndexes = [];
-    private int _numVisibleWindowColumns;
-    private int _numVisibleWindowRows;
-    private int _windowLength;
+    private readonly int _numVisibleWindowColumns;
+    private readonly int _numVisibleWindowRows;
+    private readonly int _windowLength;
+    private readonly int _numReelStrips;
+    private readonly int _symbolCount;
 
     public ThreeReelSpinEngine(IOptions<GameConfiguration> gameConfiguration)
     {
-        _gameConfiguration = gameConfiguration.Value;
+        _gameConfiguration = gameConfiguration.Value ?? throw new ArgumentNullException(nameof(gameConfiguration)); 
 
         _numVisibleWindowColumns = _gameConfiguration.VisibleArea.Columns;
         _numVisibleWindowRows = _gameConfiguration.VisibleArea.Rows;
         _windowLength = _numVisibleWindowRows * _numVisibleWindowColumns;
-
-        _visibleWindow = ArrayPool<int>.Shared.Rent(_windowLength);
-        _visibleWindowSymbols = ArrayPool<string>.Shared.Rent(_windowLength);
-        _currentRowIndexes = new int[_gameConfiguration.ReelStrips.Count];
+        _numReelStrips = _gameConfiguration.ReelStrips.Count;
+        _symbolCount = _gameConfiguration.BaseSymbols.Count;
     }
 
     public SpinResult? Spin(Random rng)
     {
+        var visibleWindow = ArrayPool<int>.Shared.Rent(_windowLength);
+        var visibleWindowSymbols = ArrayPool<string>.Shared.Rent(_windowLength);
+        var currentRowIndexes = new int[_gameConfiguration.ReelStrips.Count];
+
         try
         {
-            LoadVisibleWindow(rng);
+            LoadVisibleWindow(rng, visibleWindow, visibleWindowSymbols, currentRowIndexes);
 
-            var spinResult = CheckForWinningCombinations(LoadSpinOutput());
+            var output = BuildSpinOutput(visibleWindowSymbols);
 
-            return spinResult;
+            var winnings = CheckForWinningCombinations(visibleWindow);
+
+            return new SpinResult(winnings, output);
         }
         finally
         {
-            ArrayPool<int>.Shared.Return(_visibleWindow);
-            ArrayPool<string>.Shared.Return(_visibleWindowSymbols, clearArray: true);
+            ArrayPool<int>.Shared.Return(visibleWindow);
+            ArrayPool<string>.Shared.Return(visibleWindowSymbols, clearArray: true);
         }
     }
 
-    public void LoadVisibleWindow(Random rng)
+    public void LoadVisibleWindow(
+        Random rng,
+        int[] visibleWindow,
+        string[] visibleWindowSymbols,
+        int[] currentRowIndexes)
     {
         // Assign random numbers for each reel at the zero offset position.
-        var numReelStrips = _gameConfiguration.ReelStrips.Count;
-
-        for (int i = 0; i < numReelStrips; i++)
+        for (int i = 0; i < _numReelStrips; i++)
         {
-            _currentRowIndexes[i] = rng.Next(_gameConfiguration.ReelStrips[i].Length);
+            currentRowIndexes[i] = rng.Next(_gameConfiguration.ReelStrips[i].Length);
         }
 
         for (int r = 0; r < _numVisibleWindowRows; r++)
@@ -62,25 +67,30 @@ public class ThreeReelSpinEngine : ISpinEngine
             {
                 if (r != 0)
                 {
-                    var reelIx = _currentRowIndexes[c] + 1;
+                    var reelIx = currentRowIndexes[c] + 1;
                     if (reelIx >= _gameConfiguration.ReelStrips[c].Length)
                     {
                         reelIx = 0;
                     }
-                    _currentRowIndexes[c] = reelIx;
+                    currentRowIndexes[c] = reelIx;
                 }
 
-                var symbol = _gameConfiguration.ReelStrips[c][_currentRowIndexes[c]];
+                var symbol = _gameConfiguration.ReelStrips[c][currentRowIndexes[c]];
                 var symbolValue = _gameConfiguration.BaseSymbolDictionary[symbol];
 
-                _visibleWindow[r * _numVisibleWindowColumns + c] = symbolValue;
-                _visibleWindowSymbols[r * _numVisibleWindowColumns + c] = symbol;
+                visibleWindow[r * _numVisibleWindowColumns + c] = symbolValue;
+                visibleWindowSymbols[r * _numVisibleWindowColumns + c] = symbol;
             }
         } // loop visible window to fill it with symbol values
     }
 
-    public StringBuilder? LoadSpinOutput()
+    public string BuildSpinOutput(string[] visibleWindowSymbols)
     {
+        if (!_gameConfiguration.PrintOutput)
+        {
+            return string.Empty;
+        }
+
         StringBuilder? spinOutputBuilder = null;
         if (_gameConfiguration.PrintOutput)
         {
@@ -88,7 +98,7 @@ public class ThreeReelSpinEngine : ISpinEngine
             int maxWidth = 0;
             for (int i = 0; i < _windowLength; i++)
             {
-                var symbol = _visibleWindowSymbols[i];
+                var symbol = visibleWindowSymbols[i];
                 if (symbol.Length > maxWidth)
                     maxWidth = symbol.Length;
             }
@@ -97,31 +107,31 @@ public class ThreeReelSpinEngine : ISpinEngine
             {
                 for (int c = 0; c < _numVisibleWindowColumns; c++)
                 {
-                    spinOutputBuilder.Append(_visibleWindowSymbols[r * _numVisibleWindowColumns + c].PadRight(maxWidth + 2));
+                    spinOutputBuilder.Append(visibleWindowSymbols[r * _numVisibleWindowColumns + c].PadRight(maxWidth + 2));
                 }
                 spinOutputBuilder.AppendLine();
             }
             spinOutputBuilder.AppendLine();
         }
-        return spinOutputBuilder;
+        return spinOutputBuilder.ToString();
     }
 
-    public SpinResult? CheckForWinningCombinations(StringBuilder? spinOutputBuilder)
+    public int CheckForWinningCombinations(int[] visibleWindow)
     {
         var totalSpinWinningAmount = 0;
         foreach (var payline in _gameConfiguration.PaylineVerticalOffsets)
         {
             // For each payline, obtain the corresponding values from the window using the payline's offsets, encode it and check if
             // the resulting key matches any of the keys in the PayoutByKey array.
-            int reelOneCellValue = _visibleWindow[payline[0] * _numVisibleWindowColumns + 0];
-            int reelTwoCellValue = _visibleWindow[payline[1] * _numVisibleWindowColumns + 1];
-            int reelThreeCellValue = _visibleWindow[payline[2] * _numVisibleWindowColumns + 2];
+            int reelOneCellValue = visibleWindow[payline[0] * _numVisibleWindowColumns + 0];
+            int reelTwoCellValue = visibleWindow[payline[1] * _numVisibleWindowColumns + 1];
+            int reelThreeCellValue = visibleWindow[payline[2] * _numVisibleWindowColumns + 2];
 
             var keyFromWindow = ThreeReelPatternEncoder.EncodePaylineKey(
                 reelOneCellValue,
                 reelTwoCellValue,
                 reelThreeCellValue,
-                _gameConfiguration.BaseSymbols.Count);
+                _symbolCount);
 
             var payout = _gameConfiguration.PayoutByKey[keyFromWindow];
             if (payout > 0)
@@ -130,10 +140,6 @@ public class ThreeReelSpinEngine : ISpinEngine
             }
         } // loop paylines
 
-        return new SpinResult
-        {
-            Winnings = totalSpinWinningAmount,
-            Output = spinOutputBuilder?.ToString() ?? string.Empty
-        };
+        return totalSpinWinningAmount;
     }
 }

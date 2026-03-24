@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Common.Config;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Common;
-using Common.Config;
+using SlotMachineSimulator;
 using SpinEngineLibrary;
 
 var builder = Host.CreateApplicationBuilder(args);
